@@ -100,7 +100,7 @@ setContentView(R.layout.main);
             HashMap<String,String> user = db.getUserDetails();
             final String password = user.get("password");
         	rName = restaurantName.getText().toString();
-    		recvMail = "location@megamenu.in";
+    		recvMail = "kangkan_14@yahoo.co.in";
     		senderMail = UserEmailFetcher.getEmail(getApplicationContext());
     		sendEmailTask = new AsyncTask<Void, Void, Void>(){
             	
