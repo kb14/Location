@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+    
+
+
+	<TextView
+        android:id="@+id/myLocationText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hello" />
+	<EditText
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:hint="@string/restaurant_name"
+	    android:id="@+id/restaurantName"
+	    android:soundEffectsEnabled="true"
+	    />
+	 <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/send"
+        android:text="@string/send"
+        android:width="100dip">
+    </Button> 
+
+    <com.google.android.maps.MapView
+		android:id="@+id/myMapView"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:state_enabled="true"
+		android:clickable="true"
+		android:apiKey="0dAImqgrZbZl0cXa4k2hzLZXo4sQ9xY0MoQI0UA"
+/>
+    
+
+</LinearLayout>

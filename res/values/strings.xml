@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+   	<string name="hello">LocationActivity!</string>
+    <string name="app_name">Location</string>
+    <string name="send">Send Email</string>
+    <string name="restaurant_name">Restaurant Name</string>
+	<string name="go">Login</string>
+	<string name="enter_id">Gmail address</string>
+	<string name="enter_pass">Gmail password</string>
+	<string name="enter_pass_again">Cofirm Gmail Password</string>
+</resources>

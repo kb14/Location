@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    >
+    
+    <EditText
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:hint="@string/enter_id"
+	    android:id="@+id/enter_id"
+	    android:soundEffectsEnabled="true"
+	    />
+	<EditText
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:hint="@string/enter_pass"
+	    android:id="@+id/enter_pass"
+	    android:inputType="textPassword"
+	    android:soundEffectsEnabled="true"
+	    />
+	<EditText
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:hint="@string/enter_pass_again"
+	    android:id="@+id/enter_pass_again"
+	    android:inputType="textPassword"
+	    android:soundEffectsEnabled="true"
+	    />
+	<TextView android:id="@+id/login_error"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#e30000"
+            android:textStyle="bold"
+	/>
+	<Button
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/go"
+	    android:id="@+id/go"
+	    android:soundEffectsEnabled="true"
+	/>
+</LinearLayout>
