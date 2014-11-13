@@ -33,7 +33,14 @@
 		android:state_enabled="true"
 		android:clickable="true"
 		android:apiKey="0dAImqgrZbZl0cXa4k2hzLZXo4sQ9xY0MoQI0UA"
+		android:visibility="gone"
 />
+    
+    <fragment 
+          android:id="@+id/myMap"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:name="com.google.android.gms.maps.MapFragment"/>
     
 
 </LinearLayout>

@@ -1,4 +1,4 @@
-package apt.kangkan;
+package com.plateconstant.android;
 
 
 import java.io.*;
@@ -9,6 +9,7 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
+import com.plateconstant.android.R;
 import android.content.Context;
 import android.location.Address;
 import android.location.Criteria;
@@ -50,7 +51,7 @@ public void onCreate(Bundle savedInstanceState) {
 super.onCreate(savedInstanceState);
 setContentView(R.layout.main);
 	
-	cxt = getApplicationContext();
+	/*cxt = getApplicationContext();
 	//Get a reference to the MapView
 	 myMapView = (MapView)findViewById(R.id.myMapView);
 	 restaurantName = (EditText) findViewById(R.id.restaurantName);
@@ -130,8 +131,8 @@ setContentView(R.layout.main);
     		
     		
         }
-    });
-	}
+    });*/
+}
 	
 private final LocationListener locationListener = new LocationListener() {
 public void onLocationChanged(Location location) {

@@ -1,4 +1,4 @@
-package apt.kangkan;
+package com.plateconstant.android;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,6 +8,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.plateconstant.android.R;
 
 public class Login extends Activity implements OnClickListener{
 	

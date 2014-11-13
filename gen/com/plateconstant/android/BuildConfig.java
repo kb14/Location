@@ -1,5 +1,5 @@
 /** Automatically generated file. DO NOT MODIFY */
-package apt.kangkan;
+package com.plateconstant.android;
 
 public final class BuildConfig {
     public final static boolean DEBUG = true;

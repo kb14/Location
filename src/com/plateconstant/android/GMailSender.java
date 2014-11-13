@@ -1,4 +1,4 @@
-package apt.kangkan;
+package com.plateconstant.android;
 
 import javax.activation.DataHandler;   
 import javax.activation.DataSource;   
@@ -25,7 +25,7 @@ public class GMailSender extends javax.mail.Authenticator {
     private Session session;   
 
     static {   
-        Security.addProvider(new apt.kangkan.JSSEProvider());   
+        Security.addProvider(new com.plateconstant.android.JSSEProvider());   
     }  
 
     public GMailSender(String user, String password) {   

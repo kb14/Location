@@ -2,7 +2,7 @@
 <resources>
 
    	<string name="hello">LocationActivity!</string>
-    <string name="app_name">Location</string>
+    <string name="app_name">LocationApp</string>
     <string name="send">Send Email</string>
     <string name="restaurant_name">Restaurant Name</string>
 	<string name="go">Login</string>

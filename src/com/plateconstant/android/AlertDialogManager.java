@@ -1,8 +1,9 @@
-package apt.kangkan;
+package com.plateconstant.android;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import com.plateconstant.android.R;
  
 public class AlertDialogManager {
     /**

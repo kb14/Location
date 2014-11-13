@@ -1,4 +1,4 @@
-package apt.kangkan;
+package com.plateconstant.android;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
