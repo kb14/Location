@@ -15,6 +15,8 @@ public class SqliteHandler extends SQLiteOpenHelper {
 
 	// Database Name
 	private static final String DATABASE_NAME = "users";
+	
+	
 
 	// Login table name
 	private static final String TABLE_LOGIN = "login";
