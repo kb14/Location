@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
@@ -14,7 +15,7 @@
 	<EditText
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:hint="@string/restaurant_name"
+	    android:hint="@string/comment"
 	    android:id="@+id/restaurantName"
 	    android:soundEffectsEnabled="true"
 	    />
@@ -26,21 +27,17 @@
         android:width="100dip">
     </Button> 
 
-    <com.google.android.maps.MapView
-		android:id="@+id/myMapView"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:state_enabled="true"
-		android:clickable="true"
-		android:apiKey="0dAImqgrZbZl0cXa4k2hzLZXo4sQ9xY0MoQI0UA"
-		android:visibility="gone"
-/>
     
     <fragment 
-          android:id="@+id/myMap"
+          android:id="@+id/myMapFragment"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:name="com.google.android.gms.maps.MapFragment"/>
+          android:name="com.google.android.gms.maps.SupportMapFragment"
+  		  map:mapType="normal"
+  		  map:uiCompass="false"
+          map:uiTiltGestures="true"
+		  map:uiZoomControls="false"
+		  map:uiZoomGestures="true"/>
     
 
 </LinearLayout>

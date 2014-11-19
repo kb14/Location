@@ -3,14 +3,28 @@ package com.plateconstant.android;
 
 import java.io.*;
 import java.util.*;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
-import com.google.android.maps.Overlay;
-import com.plateconstant.android.R;
+
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentSender;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -27,194 +41,404 @@ import android.widget.Toast;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-public class LocationActivity extends MapActivity {
-	Button send;
-	String senderMail;
-	String recvMail;
-	EditText restaurantName;
-	String rName;
-	UserEmailFetcher umf = new UserEmailFetcher();
-	AsyncTask<Void, Void, Void> sendEmailTask;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+
+public class LocationActivity extends FragmentActivity implements
+		GooglePlayServicesClient.ConnectionCallbacks,
+			GooglePlayServicesClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+	
 	TextView myLocationText;
-	Context cxt;
-	AlertDialogManager alert = new AlertDialogManager();
+	
+	
+	/*
+	 * New/updated variables
+	 * Kangkan. November 17, 2014
+	 */
+	private GoogleMap myMap;	// Map object
+	
+	/*
+     * Define a request code to send to Google Play services
+     * This code is returned in Activity.onActivityResult
+     */
+    private final static int
+            CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    
+    LocationClient mLocationClient;
+    
+    // Global variable to hold the current location
+    Location mCurrentLocation;
+    
+    // Milliseconds per second
+    private static final int MILLISECONDS_PER_SECOND = 1000;
+    // Update frequency in seconds
+    public static final int UPDATE_INTERVAL_IN_SECONDS = 5;
+    // Update frequency in milliseconds
+    private static final long UPDATE_INTERVAL =
+            MILLISECONDS_PER_SECOND * UPDATE_INTERVAL_IN_SECONDS;
+    // The fastest update frequency, in seconds
+    private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
+    // A fast frequency ceiling in milliseconds
+    private static final long FASTEST_INTERVAL =
+            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
+    
+    // Define an object that holds accuracy and frequency parameters
+    LocationRequest mLocationRequest;
+    
+    boolean mUpdatesRequested;
+	private SharedPreferences mPrefs;
+	private Editor mEditor;
+	
+	
 	@Override
-	protected boolean isRouteDisplayed() {
-		return false;
-		}
-	MapView myMapView = null;
-	MapController mapController;
-	MyLocationOverlay myLocationOverlay;
-	//MyPositionOverlay positionOverlay;
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		
+		
+		// Open the shared preferences
+        mPrefs = getSharedPreferences("SharedPreferences",
+                Context.MODE_PRIVATE);
+        // Get a SharedPreferences editor
+        mEditor = mPrefs.edit();
+		
+		/*
+         * Create a new location client, using the enclosing class to
+         * handle callbacks.
+         */
+        mLocationClient = new LocationClient(this, this, this);
+        // Start with updates turned off
+        mUpdatesRequested = true;
+        
+        // Create the LocationRequest object
+        mLocationRequest = LocationRequest.create();
+        // Use high accuracy
+        mLocationRequest.setPriority(
+                LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Set the update interval to 5 seconds
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        // Set the fastest update interval to 1 second
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+		
+		
+	}
+	
 	@Override
-public void onCreate(Bundle savedInstanceState) {
-super.onCreate(savedInstanceState);
-setContentView(R.layout.main);
-	
-	/*cxt = getApplicationContext();
-	//Get a reference to the MapView
-	 myMapView = (MapView)findViewById(R.id.myMapView);
-	 restaurantName = (EditText) findViewById(R.id.restaurantName);
-	 
-	//Get the Map View’s controller
-	mapController = myMapView.getController();
-	
-	//Configure the map display options
-	myMapView.setSatellite(false);
-	
-	//myMapView.setStreetView(true);
-	myMapView.setBuiltInZoomControls(true);
-	
-	//Zoom in
-	mapController.setZoom(17);
-	
-	// Add the MyPositionOverlay
-	List<Overlay> overlays = myMapView.getOverlays();
-	myLocationOverlay =new MyLocationOverlay(this, myMapView);
-	overlays.add(myLocationOverlay);
-	
-	//myLocationOverlay.enableCompass();
-	myLocationOverlay.enableMyLocation();
+    protected void onResume() {
+		super.onResume();
+		
+		/*
+         * Get any previous setting for location updates
+         * Gets "false" if an error occurs
+         */
+        if (mPrefs.contains("KEY_UPDATES_ON")) {
+            mUpdatesRequested =
+                    mPrefs.getBoolean("KEY_UPDATES_ON", true);
 
-	LocationManager locationManager;
-	String context = Context.LOCATION_SERVICE;
-	locationManager = (LocationManager)getSystemService(context);
-	
-	Criteria criteria = new Criteria();
-	criteria.setAccuracy(Criteria.ACCURACY_FINE);
-	criteria.setAltitudeRequired(false);
-	criteria.setBearingRequired(false);
-	criteria.setCostAllowed(true);
-	criteria.setPowerRequirement(Criteria.POWER_LOW);
-	String provider = locationManager.getBestProvider(criteria, true);
-	Location location =
-	locationManager.getLastKnownLocation(provider);
-	updateWithNewLocation(location);
-	locationManager.requestLocationUpdates(provider, 2000, 10,
-	locationListener);
-	send = (Button) findViewById(R.id.send);
-	 
-   send.setOnClickListener(new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-        	SqliteHandler db = new SqliteHandler(getApplicationContext());
-            HashMap<String,String> user = db.getUserDetails();
-            final String password = user.get("password");
-        	rName = restaurantName.getText().toString();
-    		recvMail = "kangkan_14@yahoo.co.in";
-    		senderMail = UserEmailFetcher.getEmail(getApplicationContext());
-    		sendEmailTask = new AsyncTask<Void, Void, Void>(){
-            	
-            	@Override
-                protected Void doInBackground(Void... params) {
-            		try {
-            			
-                        GMailSender sender = new GMailSender(senderMail, password);
-                        sender.sendMail(rName,   
-                                myLocationText.getText().toString(),   
-                                senderMail,   
-                                recvMail);   
-                    } catch (Exception e) {   
-                        Log.e("SendMail", e.getMessage(), e);   
-                    } 
-            		return null;
-            	}
-            	@Override
-                protected void onPostExecute(Void result) {
-            		//Toast.makeText(cxt, "Email sent", Toast.LENGTH_LONG).show();
-            		alert.showAlertDialog(LocationActivity.this, "Location",
-        	                "Email Sent!", true);
-            	}
-    		};	
-    		
-    		sendEmailTask.execute(null, null, null);
-    		
-    		
+        // Otherwise, turn off location updates
+        } else {
+            mEditor.putBoolean("KEY_UPDATES_ON", false);
+            mEditor.commit();
         }
-    });*/
-}
-	
-private final LocationListener locationListener = new LocationListener() {
-public void onLocationChanged(Location location) {
-updateWithNewLocation(location);
-}
-public void onProviderDisabled(String provider){
-updateWithNewLocation(null);
-}
-public void onProviderEnabled(String provider){ }
-public void onStatusChanged(String provider, int status,
-Bundle extras){ }
-};
-private void updateWithNewLocation(Location location) {
-	
-	String latLongString;
-	myLocationText = (TextView)findViewById(R.id.myLocationText);
-	
-	String addressString = "No address found";
-	
-	if (location != null) {
-		// Update my location marker
-		//myLOverlay.setLocation(location);
 		
+		setUpMapIfNeeded();		
+	}
+	
+	@Override
+    protected void onPause() {
+        // Save the current setting for updates
+        mEditor.putBoolean("KEY_UPDATES_ON", mUpdatesRequested);
+        mEditor.commit();
+        super.onPause();
+    }
+	
+	/*
+     * Called when the Activity becomes visible.
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Connect the client.
+        mLocationClient.connect();
+    }
+    /*
+     * Called when the Activity is no longer visible.
+     */
+    @Override
+    protected void onStop() {
+    	
+    	// If the client is connected
+        if (mLocationClient.isConnected()) {
+            /*
+             * Remove location updates for a listener.
+             * The current Activity is the listener, so
+             * the argument is "this".
+             */
+        	mLocationClient.removeLocationUpdates(this);
+        }
+        // Disconnecting the client invalidates it.
+        mLocationClient.disconnect();
+        super.onStop();
+    }
+	
+	private void setUpMapIfNeeded() {
+	    // Do a null check to confirm that we have not already instantiated the map.
+	    if (myMap == null) {
+	        myMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.myMapFragment))
+	                            .getMap();
+	        // Check if we were successful in obtaining the map.
+	        if (myMap != null) {
+	            myMap.setMyLocationEnabled(true);
+	        	
+	        	
+
+	        }
+	    }
+	}
+	
+	
+	// Define a DialogFragment that displays the error dialog
+    public static class ErrorDialogFragment extends DialogFragment {
+        // Global field to contain the error dialog
+        private Dialog mDialog;
+        // Default constructor. Sets the dialog field to null
+        public ErrorDialogFragment() {
+            super();
+            mDialog = null;
+        }
+        // Set the dialog to display
+        public void setDialog(Dialog dialog) {
+            mDialog = dialog;
+        }
+        // Return a Dialog to the DialogFragment.
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return mDialog;
+        }
+    }
+    
+    /*
+     * Handle results returned to the FragmentActivity
+     * by Google Play services
+     */
+    @Override
+    protected void onActivityResult(
+            int requestCode, int resultCode, Intent data) {
+        // Decide what to do based on the original request code
+        switch (requestCode) {
+            case CONNECTION_FAILURE_RESOLUTION_REQUEST :
+            /*
+             * If the result code is Activity.RESULT_OK, try
+             * to connect again
+             */
+                switch (resultCode) {
+                    case Activity.RESULT_OK :
+                    /*
+                     * Try the request again
+                     */
+                    break;
+                }
+        }
+     }
+    
+    private boolean servicesConnected() {
+        // Check that Google Play services is available
+        int resultCode =
+                GooglePlayServicesUtil.
+                        isGooglePlayServicesAvailable(this);
+        // If Google Play services is available
+        if (ConnectionResult.SUCCESS == resultCode) {
+            // In debug mode, log the status
+            Log.d("Location Updates",
+                    "Google Play services is available.");
+            // Continue
+            return true;
+        // Google Play services was not available for some reason.
+        // resultCode holds the error code.
+        } else {
+            // Get the error dialog from Google Play services
+            Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+                    resultCode,
+                    this,
+                    CONNECTION_FAILURE_RESOLUTION_REQUEST);
+
+            // If Google Play services can provide an error dialog
+            if (errorDialog != null) {
+                // Create a new DialogFragment for the error dialog
+                ErrorDialogFragment errorFragment =
+                        new ErrorDialogFragment();
+                // Set the dialog in the DialogFragment
+                errorFragment.setDialog(errorDialog);
+                // Show the error dialog in the DialogFragment
+                errorFragment.show(getSupportFragmentManager(),
+                        "Location Updates");
+            }
+        }
+        return false;
+    }
+    
+    public void showErrorDialog(int errorCode){
+    	Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+                errorCode,
+                this,
+                CONNECTION_FAILURE_RESOLUTION_REQUEST);
+
+        // If Google Play services can provide an error dialog
+        if (errorDialog != null) {
+            // Create a new DialogFragment for the error dialog
+            ErrorDialogFragment errorFragment =
+                    new ErrorDialogFragment();
+            // Set the dialog in the DialogFragment
+            errorFragment.setDialog(errorDialog);
+            // Show the error dialog in the DialogFragment
+            errorFragment.show(getSupportFragmentManager(),
+                    "Location Updates");
+        }
+    }
+    
+	/*
+     * Called by Location Services if the attempt to
+     * Location Services fails.
+     */
+	@Override
+	public void onConnectionFailed(ConnectionResult connectionResult) {
+		// TODO Auto-generated method stub
+		/*
+         * Google Play services can resolve some errors it detects.
+         * If the error has a resolution, try sending an Intent to
+         * start a Google Play services activity that can resolve
+         * error.
+         */
+        if (connectionResult.hasResolution()) {
+            try {
+                // Start an Activity that tries to resolve the error
+                connectionResult.startResolutionForResult(
+                        this,
+                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
+                /*
+                 * Thrown if Google Play services canceled the original
+                 * PendingIntent
+                 */
+            } catch (IntentSender.SendIntentException e) {
+                // Log the error
+                e.printStackTrace();
+            }
+        } else {
+            /*
+             * If no resolution is available, display a dialog to the
+             * user with the error.
+             */
+            showErrorDialog(connectionResult.getErrorCode());
+        }
+    }
+	
+	
+	/*
+     * Called by Location Services when the request to connect the
+     * client finishes successfully. At this point, you can
+     * request the current location or start periodic updates
+     */
+	@Override
+	public void onConnected(Bundle arg0) {
+		// TODO Auto-generated method stub
+		// Display the connection status
+        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+        
+        // If already requested, start periodic updates
+        if (mUpdatesRequested) {
+            mLocationClient.requestLocationUpdates(mLocationRequest, this);
+        }
+        
+        mCurrentLocation = mLocationClient.getLastLocation();
+		updateWithNewLocation(mCurrentLocation);
 		
-		// Update the map location.
-		Double geoLat = location.getLatitude()*1E6;
-		Double geoLng = location.getLongitude()*1E6;
-		GeoPoint point = new GeoPoint(geoLat.intValue(),
-		geoLng.intValue());
-		mapController.animateTo(point);
+	}
+
+	/*
+     * Called by Location Services if the connection to the
+     * location client drops because of an error.
+     */
+	@Override
+	public void onDisconnected() {
+		// TODO Auto-generated method stub
+		// Display the connection status
+        Toast.makeText(this, "Disconnected. Please re-connect.",
+                Toast.LENGTH_SHORT).show();
 		
-		double lat = location.getLatitude();
-		double lng = location.getLongitude();
-		latLongString =  lat + "," + lng;
+	}
+	
+	
 		
-		double latitude = location.getLatitude();
-		double longitude = location.getLongitude();
-		Geocoder gc = new Geocoder(this, Locale.getDefault());
-		try {
-		List<Address> addresses = gc.getFromLocation(latitude, longitude, 1);
-		StringBuilder sb = new StringBuilder();
-		if (addresses.size() > 0) {
-		Address address = addresses.get(0);
-		for (int i = 0; i < address.getMaxAddressLineIndex(); i++){
+	@Override
+	public void onLocationChanged(Location location) {
+		updateWithNewLocation(location);
+	}
+	
+	
+	
+	private void updateWithNewLocation(Location location) {
+		
+		String latLongString;
+		myLocationText = (TextView)findViewById(R.id.myLocationText);
+		
+		String addressString = "No address found";
+		
+		if (location != null) {
+			// Update my location marker
+			//myLOverlay.setLocation(location);
 			
-			if(address.getAddressLine(i) != null){
-				sb.append(address.getAddressLine(i)).append("\n");
-			}	
+			
+			// Update the map location.
+			/*Double geoLat = location.getLatitude()*1E6;
+			Double geoLng = location.getLongitude()*1E6;
+			GeoPoint point = new GeoPoint(geoLat.intValue(),
+			geoLng.intValue());
+			mapController.animateTo(point);*/
+			
+			double lat = location.getLatitude();
+			double lng = location.getLongitude();
+			latLongString =  lat + "," + lng;
+			
+			Geocoder gc = new Geocoder(this, Locale.getDefault());
+			try {
+			List<Address> addresses = gc.getFromLocation(lat, lng, 1);
+			
+			StringBuilder sb = new StringBuilder();
+			if (addresses.size() > 0) {
+			Address address = addresses.get(0);
+			for (int i = 0; i < address.getMaxAddressLineIndex(); i++){
+				
+				if(address.getAddressLine(i) != null){
+					sb.append(address.getAddressLine(i)).append("\n");
+				}	
+			}
+			
+			if(address.getLocality() != null){
+				sb.append(address.getLocality()).append("\n");
+			}
+			
+			if(address.getPostalCode()!=null){
+				sb.append(address.getPostalCode()).append("\n");
+			}
+			
+			if(address.getCountryName() != null){
+				sb.append(address.getCountryName());
+			}
+			}
+			
+			addressString = sb.toString();
+			} catch (IOException e) {}
+		} else {
+			latLongString = "No location found";
 		}
-		
-		if(address.getLocality() != null){
-			sb.append(address.getLocality()).append("\n");
-		}
-		
-		if(address.getPostalCode()!=null){
-			sb.append(address.getPostalCode()).append("\n");
-		}
-		
-		if(address.getCountryName() != null){
-			sb.append(address.getCountryName());
-		}
-		}
-		
-		addressString = sb.toString();
-		} catch (IOException e) {}
-	} else {
-		latLongString = "No location found";
-	}
-	myLocationText.setText(latLongString+ "\n" + addressString);
+		myLocationText.setText(latLongString+ "\n" + addressString);
 	}
 
-@Override
-public boolean onKeyDown(int keyCode, KeyEvent event) {
-  if (keyCode == KeyEvent.KEYCODE_S) {
-	  myMapView.setSatellite(!myMapView.isSatellite());
-    return(true);
-  }
-  else if (keyCode == KeyEvent.KEYCODE_Z) {
-	  myMapView.displayZoomControls(true);
-    return(true);
-  }
-  return(super.onKeyDown(keyCode, event));
-}
+	
+	
 
+	
 }
