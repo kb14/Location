@@ -22,8 +22,10 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -49,8 +51,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
 
-public class LocationActivity extends FragmentActivity implements
+public class LocationActivity extends ActionBarActivity implements
 		GooglePlayServicesClient.ConnectionCallbacks,
 			GooglePlayServicesClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 	
@@ -102,6 +105,14 @@ public class LocationActivity extends FragmentActivity implements
 	Button shareBtn;
 	EditText commentField;
 	
+	// Selected Items Arraylist : Co-Ordinates/Address
+	ArrayList<Integer> selectedItems;		// 0:Location, 1:Address
+	// Multiple Items
+	CharSequence[] items = {"Latitude/Longitude", "Address"};
+
+
+	private AlertDialog alert;
+	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -133,8 +144,18 @@ public class LocationActivity extends FragmentActivity implements
         // Set the fastest update interval to 1 second
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         
+        selectedItems = new ArrayList<Integer>();
+        
         shareBtn = (Button) findViewById(R.id.shareBtn);
-        commentField = (EditText) findViewById(R.id.commentText);		
+        commentField = (EditText) findViewById(R.id.commentText);
+        
+        shareBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+            	selectedItems.add(0);
+            	showAlertDialogWithMultipleOptions();
+            }
+        });
 		
 	}
 	
@@ -210,6 +231,52 @@ public class LocationActivity extends FragmentActivity implements
 	    }
 	}
 	
+	public void showAlertDialogWithMultipleOptions(){
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Include...");
+        builder.setMultiChoiceItems(items, new boolean[]{true, false}, new DialogInterface.OnMultiChoiceClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int indexSelected, boolean isChecked) {
+				if (isChecked) {
+                    
+                    selectedItems.add(indexSelected);
+                } else if (selectedItems.contains(indexSelected)) {
+                   
+                    selectedItems.remove(Integer.valueOf(indexSelected));
+                    
+                }
+				
+				Button buttonDone = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+				if(selectedItems.size() == 0){
+                	
+                	buttonDone.setEnabled(false);
+                }
+				else{
+					buttonDone.setEnabled(true);
+				}
+				
+			}
+        	
+        })
+        .setPositiveButton("Done", new DialogInterface.OnClickListener() {
+             @Override
+             public void onClick(DialogInterface dialog, int id) {
+                 showShareLocationDialog();
+            	 dialog.dismiss();
+             }
+         })
+         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+             @Override
+             public void onClick(DialogInterface dialog, int id) {
+               selectedItems.clear();
+               dialog.dismiss();
+             }
+         });
+        alert = builder.create();
+        alert.show();
+	}
+	
 	
 	// Define a DialogFragment that displays the error dialog
     public static class ErrorDialogFragment extends DialogFragment {
@@ -254,6 +321,38 @@ public class LocationActivity extends FragmentActivity implements
                 }
         }
      }
+    
+    public void showShareLocationDialog(){
+    	
+    	String shareText = "";
+    	String fullText = myLocationText.getText().toString();
+    	if(selectedItems.size() == 2){						// Share both lat/long and address
+    		shareText = fullText;
+    	}
+    	else{
+    		String splitItems[] = fullText.split("\n");
+    		int len = splitItems.length;
+    		if(len > 0){
+    			if(selectedItems.contains(0)){					// Only lat/long case
+        			shareText = splitItems[0];
+        		}
+        		else if(selectedItems.contains(1)){				// Only address case
+        			for(int i=1; i<len; i++){
+        				shareText = shareText + splitItems[i] + "\n";
+        			}
+        		}
+    		
+    		}
+    	}
+    	
+    	Intent sendIntent = new Intent();
+    	sendIntent.setAction(Intent.ACTION_SEND);
+    	sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+    	sendIntent.setType("text/plain");
+    	startActivity(Intent.createChooser(sendIntent, "Share Location"));
+    	
+    	selectedItems.clear();
+    }
     
     private boolean servicesConnected() {
         // Check that Google Play services is available

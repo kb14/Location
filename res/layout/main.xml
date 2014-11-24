@@ -10,6 +10,7 @@
         android:id="@+id/myLocationText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="#000000"
         android:text="@string/hello" />
 	
 	<LinearLayout 
@@ -24,6 +25,7 @@
 		    android:layout_weight="1" 
 		    android:hint="@string/comment"
 		    android:id="@+id/commentText"
+		    android:maxLines="1"
 		    android:soundEffectsEnabled="true"
 	    />
 	 	<Button
