@@ -9,9 +9,12 @@ import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -92,6 +95,13 @@ public class LocationActivity extends FragmentActivity implements
 	private SharedPreferences mPrefs;
 	private Editor mEditor;
 	
+	// Zoom flag
+	private boolean alreadyZoomed = false;
+	
+	// Share button and comment edittext
+	Button shareBtn;
+	EditText commentField;
+	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -122,7 +132,9 @@ public class LocationActivity extends FragmentActivity implements
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         // Set the fastest update interval to 1 second
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-		
+        
+        shareBtn = (Button) findViewById(R.id.shareBtn);
+        commentField = (EditText) findViewById(R.id.commentText);		
 		
 	}
 	
@@ -192,9 +204,8 @@ public class LocationActivity extends FragmentActivity implements
 	        // Check if we were successful in obtaining the map.
 	        if (myMap != null) {
 	            myMap.setMyLocationEnabled(true);
-	        	
-	        	
-
+	            //myMap.moveCamera(CameraUpdateFactory.zoomTo(17.0f));
+	            alreadyZoomed = false;
 	        }
 	    }
 	}
@@ -387,52 +398,55 @@ public class LocationActivity extends FragmentActivity implements
 		String addressString = "No address found";
 		
 		if (location != null) {
-			// Update my location marker
-			//myLOverlay.setLocation(location);
 			
-			
-			// Update the map location.
-			/*Double geoLat = location.getLatitude()*1E6;
-			Double geoLng = location.getLongitude()*1E6;
-			GeoPoint point = new GeoPoint(geoLat.intValue(),
-			geoLng.intValue());
-			mapController.animateTo(point);*/
 			
 			double lat = location.getLatitude();
 			double lng = location.getLongitude();
+			
+			LatLng latLng = new LatLng(lat, lng);
+			
+			if(!alreadyZoomed){
+				myMap.moveCamera( CameraUpdateFactory.newLatLngZoom(latLng, 16.0f) );
+				alreadyZoomed = true;
+			}
+			
 			latLongString =  lat + "," + lng;
 			
 			Geocoder gc = new Geocoder(this, Locale.getDefault());
 			try {
-			List<Address> addresses = gc.getFromLocation(lat, lng, 1);
-			
-			StringBuilder sb = new StringBuilder();
-			if (addresses.size() > 0) {
-			Address address = addresses.get(0);
-			for (int i = 0; i < address.getMaxAddressLineIndex(); i++){
+				List<Address> addresses = gc.getFromLocation(lat, lng, 1);
 				
-				if(address.getAddressLine(i) != null){
-					sb.append(address.getAddressLine(i)).append("\n");
-				}	
+				StringBuilder sb = new StringBuilder();
+				if (addresses.size() > 0) {
+					Address address = addresses.get(0);
+					for (int i = 0; i < address.getMaxAddressLineIndex(); i++){
+						
+						if(address.getAddressLine(i) != null && !address.getAddressLine(i).equals("")){
+							sb.append(address.getAddressLine(i)).append("\n");
+						}	
+					}
+					
+					if(address.getLocality() != null && !address.getLocality().equals("")){
+						sb.append(address.getLocality()).append("\n");
+					}
+					
+					if(address.getPostalCode()!=null && !address.getPostalCode().equals("")){
+						sb.append(address.getPostalCode()).append("\n");
+					}
+					
+					if(address.getCountryName() != null && !address.getCountryName().equals("")){
+						sb.append(address.getCountryName());
+					}
+				}
+				
+				addressString = sb.toString();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			
-			if(address.getLocality() != null){
-				sb.append(address.getLocality()).append("\n");
-			}
-			
-			if(address.getPostalCode()!=null){
-				sb.append(address.getPostalCode()).append("\n");
-			}
-			
-			if(address.getCountryName() != null){
-				sb.append(address.getCountryName());
-			}
-			}
-			
-			addressString = sb.toString();
-			} catch (IOException e) {}
 		} else {
+			
 			latLongString = "No location found";
+			
 		}
 		myLocationText.setText(latLongString+ "\n" + addressString);
 	}

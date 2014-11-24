@@ -3,7 +3,7 @@
 
    	<string name="hello">LocationActivity!</string>
     <string name="app_name">LocationApp</string>
-    <string name="send">Send Email</string>
+    <string name="share">Share</string>
     <string name="comment">Comment</string>
 	<string name="go">Login</string>
 	<string name="enter_id">Gmail address</string>

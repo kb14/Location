@@ -4,29 +4,38 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-    
-
+   
 
 	<TextView
         android:id="@+id/myLocationText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/hello" />
-	<EditText
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:hint="@string/comment"
-	    android:id="@+id/restaurantName"
-	    android:soundEffectsEnabled="true"
+	
+	<LinearLayout 
+     android:id="@+id/textFieldButton"   
+     android:orientation="horizontal"   
+     android:layout_width="fill_parent" 
+     android:layout_height="wrap_content" >
+        
+	    <EditText
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_weight="1" 
+		    android:hint="@string/comment"
+		    android:id="@+id/commentText"
+		    android:soundEffectsEnabled="true"
 	    />
-	 <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/send"
-        android:text="@string/send"
-        android:width="100dip">
-    </Button> 
-
+	 	<Button
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:id="@+id/shareBtn"
+	        android:text="@string/share"
+	        android:width="80dp">
+    	</Button> 
+        
+    </LinearLayout>
+	
     
     <fragment 
           android:id="@+id/myMapFragment"
@@ -37,7 +46,8 @@
   		  map:uiCompass="false"
           map:uiTiltGestures="true"
 		  map:uiZoomControls="false"
-		  map:uiZoomGestures="true"/>
+		  map:uiZoomGestures="true"
+		  />
     
 
 </LinearLayout>
